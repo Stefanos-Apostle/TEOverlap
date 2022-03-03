@@ -256,7 +256,7 @@ plot_manhattan <- function(GWAS_df, subfamily = "All", label_cutoff = 75, size =
     ) +
     #scale_size_continuous(range = c(1,2)) +
     ggtitle(paste("SNPs in ", subfamily, sep = "")) +
-    theme1 +
+    theme(text = element_text(face = "bold", size = 15), plot.title = element_text(hjust = 0.5), line = element_line(size = 1)) +
     coord_cartesian(clip = 'off') +
     scale_color_viridis_c()
 }
@@ -296,7 +296,7 @@ corr_plot <- function(GWAS_df, subfamily = "All") {
     #annotate("text", x = 45, y = 115, label = paste("y = ", round(lm$coefficients[2], digits = 4), "x + ", round(lm$coefficients[1], digits = 4), sep = "")) +
     ggtitle(paste("SNPs of ", subfamily, sep = "")) +
     xlab("-log10pValue") +
-    theme1
+    theme(text = element_text(face = "bold", size = 15), plot.title = element_text(hjust = 0.5), line = element_line(size = 1))
 
 }
 
@@ -338,10 +338,10 @@ nTE_genes <- function(GWAS_df) {
   }
 
   p <- ggbarplot(asg, x = "Gene", y = "Count", color = "Gene")+
-    theme1  +
+    theme(text = element_text(face = "bold", size = 15), plot.title = element_text(hjust = 0.5), line = element_line(size = 1))  +
     theme(axis.text.x = element_blank(), legend.position = "none") +
     geom_text_repel(label = ifelse(asg$Count > 1, asg$Gene, ""), color = ifelse(asg$max_nlogp > 100, "red", "black")) +
-    ggtitle("Count of BMI Associated SNPs in TEs Closest Gene")
+    ggtitle("Count of Regions in TEs Closest Gene")
 
   return(p)
 }
@@ -402,7 +402,7 @@ prop_overlap <- function(LD_df, GWAS_df) {
   p <- ggpie(snp_df, x = "V1", label = "label", fill = "column", color = "white", lab.pos = "in") +
     theme(legend.position = "right") +
     theme(text = element_text(face = "bold", size = 15), plot.title = element_text(hjust = 0.5), line = element_line(size = 1)) +
-    ggtitle("Proportion of LD Clumps \n Variants with Overlapping TEs")
+    ggtitle("Proportion of Regions \n with Overlapping TEs")
 
   return(p)
 }
@@ -451,13 +451,13 @@ prop_subfamilies <- function(GWAS_df){
                     color = "white", lab.pos = "out", lab.font = 3, lab.adjust = 5) +
     ggtitle("Percent of TE Subfamilies in TE_BMI_SNPs") +
     theme(legend.position = "right") +
-    theme1
+    theme(text = element_text(face = "bold", size = 15), plot.title = element_text(hjust = 0.5), line = element_line(size = 1))
 
   p1 <- ggpie(pie_df, "Percent", label = "label", fill = "Subfamily",
         color = "white", lab.pos = "out", lab.font = 1, lab.adjust = 5) +
-    ggtitle("Percent of TE Subfamilies in TE_BMI_SNPs") +
+    ggtitle("Percept Proportion of TE Subfamilies") +
     theme(legend.position = "none") +
-    theme1
+    theme(text = element_text(face = "bold", size = 15), plot.title = element_text(hjust = 0.5), line = element_line(size = 1))
 
 
   leg <- get_legend(pie_plot)

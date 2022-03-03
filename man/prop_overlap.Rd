@@ -1,7 +1,7 @@
 \name{prop_overlap}
 \alias{prop_overlap}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{
+\title{Function to calculate and plot the proportion of LD Clumps with overlapping TEs
 %%  ~~function to do ... ~~
 }
 \description{

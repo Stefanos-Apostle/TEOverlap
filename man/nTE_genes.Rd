@@ -1,7 +1,7 @@
 \name{nTE_genes}
 \alias{nTE_genes}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{
+\title{Function to plot the frequencies of overlapping TEs with their associated genes.
 %%  ~~function to do ... ~~
 }
 \description{

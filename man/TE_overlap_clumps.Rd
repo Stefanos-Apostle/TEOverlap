@@ -1,7 +1,7 @@
 \name{TE_overlap_clumps}
 \alias{TE_overlap_clumps}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{
+\title{Finds TEs that overlap our LD clump windows
 %%  ~~function to do ... ~~
 }
 \description{

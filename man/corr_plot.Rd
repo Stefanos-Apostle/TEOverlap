@@ -1,7 +1,7 @@
 \name{corr_plot}
 \alias{corr_plot}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{
+\title{Function to plot a scatter plot of the SNPs by age and pValue as well as calculate correlation between the two variables.
 %%  ~~function to do ... ~~
 }
 \description{

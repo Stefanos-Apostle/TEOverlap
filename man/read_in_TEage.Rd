@@ -1,7 +1,7 @@
 \name{read_in_TEage}
 \alias{read_in_TEage}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{
+\title{ Reads in .bed file of TE ages and returns as a data.frame with foramtted column names and strsplit chromosome names
 %%  ~~function to do ... ~~
 }
 \description{

@@ -1,7 +1,7 @@
 \name{runOverlap}
 \alias{runOverlap}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{
+\title{Runs TE_overlap for each TE from age_df to find if it overlaps with a single SNP position
 %%  ~~function to do ... ~~
 }
 \description{

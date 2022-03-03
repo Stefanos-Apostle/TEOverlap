@@ -1,7 +1,7 @@
 \name{plot_manhattan}
 \alias{plot_manhattan}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{
+\title{Manhattan plot of the SNPs that contains overlapping TEs
 %%  ~~function to do ... ~~
 }
 \description{

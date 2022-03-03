@@ -1,7 +1,7 @@
 \name{prop_subfamilies}
 \alias{prop_subfamilies}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{
+\title{Function to calcualte and plot the proportion of each TE subfamily in the TEs that overlap LD clumps
 %%  ~~function to do ... ~~
 }
 \description{

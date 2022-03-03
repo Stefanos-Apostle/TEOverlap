@@ -1,7 +1,7 @@
 \name{LDClump_window}
 \alias{LDClump_window}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{
+\title{Function to alter the window of the LD Clump to a specific range
 %%  ~~function to do ... ~~
 }
 \description{

@@ -1,7 +1,7 @@
 \name{TE_overlap}
 \alias{TE_overlap}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{
+\title{Finds TEs that overlap a specific SNP position.
 %%  ~~function to do ... ~~
 }
 \description{

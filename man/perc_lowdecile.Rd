@@ -1,7 +1,7 @@
 \name{perc_lowdecile}
 \alias{perc_lowdecile}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{
+\title{Function to calcualte the percent enrichment of TEs in the bottom d decile(s) of age
 %%  ~~function to do ... ~~
 }
 \description{

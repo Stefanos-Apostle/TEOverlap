@@ -1,7 +1,7 @@
 \name{calc_axis_set}
 \alias{calc_axis_set}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{
+\title{Function to format GWAS_df correctly
 %%  ~~function to do ... ~~
 }
 \description{

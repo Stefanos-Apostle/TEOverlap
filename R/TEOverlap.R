@@ -152,7 +152,7 @@ TE_overlap_clumps <- function(TE_age_df, LD_df) {
   for (i in c(1:nrow(LD_df))) {
     rdf <- LD_df[i, ]
     chr_TE_df <- TE_age_df[which(TE_age_df$chromosome == rdf$chromosome), ]
-    chr_TE_df <- chr_TE_df[-which(TE_age_df$start > rdf$clumpEnd | TE_age_df$end < rdf$clumpStart), ]
+    chr_TE_df <- chr_TE_df[-which(chr_TE_df$start > rdf$clumpEnd | chr_TE_df$end < rdf$clumpStart), ]
 
     if (nrow(chr_TE_df) > 0) {
 

@@ -263,27 +263,42 @@ plot_manhattan <- function(GWAS_df, subfamily = "All", label_cutoff = 75, size =
 
 
 
-corr_plot <- function(GWAS_df, subfamily = "All") {
+corr_plot <- function(GWAS_df, subfamily = "All", Age = "raw", TE_age_df = "not required for raw age") {
   "
   Function to plot a scatter plot of the SNPs by age and pValue as well as calculate correlation between the two variables.
 
   Inputs:
     GWAS_df = Output data frame of overlap functions
     subfamily = Option to subset data frame to plot only a specific subfamily of TEs; default is to plot All TEs
+    Age = Option to plot raw age values or relative subfamily age by z score to compare cross-subfamily overlapping TEs
+    TE_age_df <- Data.frame of specific TE elements with their ranges and associated age (MYA)
 
   Output:
     Scatter plot with correlation results
   "
   if (subfamily == "All") {
     alt <- GWAS_df
+    if (Age == "relative") {
+      alt <- calc_subfamily_agez(alt, TE_age_df)
+    }else if (Age != "raw") {
+      stop("Age must be one of the following; c('raw', 'relative')")
+    }
   }else{
     alt <- GWAS_df[which(GWAS_df$subfamily == subfamily), ]
+  }
+
+  if (Age == "relative" && TE_age_df == "not required for raw age") {
+    stop("If running relative age, TE_age_df must be supplied as input")
   }
 
   axis_set <- calc_axis_set(alt)
 
   rank_df <- data.frame(Row = order(-log10(axis_set$pValue), decreasing = T),
-                        Age = axis_set$age[order(-log10(axis_set$pValue), decreasing = T)],
+                        Age = if (Age == "raw") {
+                          axis_set$age[order(-log10(axis_set$pValue), decreasing = T)]
+                        }else if (Age == "relative") {
+                          axis_set$subf_z[order(-log10(axis_set$pValue), decreasing = T)]
+                        },
                         nlog10p = -log10(axis_set$pValue[order(-log10(axis_set$pValue), decreasing = T)]),
                         gene = axis_set$gene[order(-log10(axis_set$pValue), decreasing = T)],
                         Rank = c(1:nrow(axis_set)))
@@ -295,18 +310,23 @@ corr_plot <- function(GWAS_df, subfamily = "All") {
             cor.coef = T) +
     #annotate("text", x = 45, y = 115, label = paste("y = ", round(lm$coefficients[2], digits = 4), "x + ", round(lm$coefficients[1], digits = 4), sep = "")) +
     ggtitle(paste("SNPs of ", subfamily, sep = "")) +
+    ylab(ifelse(Age == 'raw', 'Age (MYA)', 'Age (z-score by subfamily)')) +
     xlab("-log10pValue") +
     theme(text = element_text(face = "bold", size = 15), plot.title = element_text(hjust = 0.5), line = element_line(size = 1))
 
 }
 
 
-nTE_genes <- function(GWAS_df) {
+
+
+
+nTE_genes <- function(GWAS_df, labels_repelled = F) {
   "
   Function to plot the frequencies of overlapping TEs with their associated genes.
 
   Input:
     GWAS_df = Output data frame of overlap functions
+    labels = Selecting whether or it labels should be above bars or not
 
   Output:
     Ggplot2 formatted bar plot
@@ -339,15 +359,23 @@ nTE_genes <- function(GWAS_df) {
 
   p <- ggbarplot(asg, x = "Gene", y = "Count", color = "Gene")+
     theme(text = element_text(face = "bold", size = 15), plot.title = element_text(hjust = 0.5), line = element_line(size = 1))  +
-    theme(axis.text.x = element_blank(), legend.position = "none") +
-    geom_text_repel(label = ifelse(asg$Count > 1, asg$Gene, ""), color = ifelse(asg$max_nlogp > 100, "red", "black")) +
+    theme(legend.position = "none") +
     ggtitle("Count of Regions in TEs Closest Gene")
+
+  if (labels_repelled == T) {
+    p <- p +
+      theme(axis.text.x = element_blank()) +
+      geom_text_repel(label = ifelse(asg$Count > 1, asg$Gene, ""), color = ifelse(asg$max_nlogp > 100, "red", "black"))
+  } else{
+    p <- p +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  }
 
   return(p)
 }
 
 
-perc_lowdecile <- function(GWAS_df, d) {
+perc_lowdecile <- function(GWAS_df, d = 1) {
   "
   Function to calcualte the % enrichment of TEs in the bottom d decile(s) of age.
 
@@ -358,9 +386,11 @@ perc_lowdecile <- function(GWAS_df, d) {
   Output:
     Data frame of each subfamily describing enrichment in the bottom decile of age.
   "
+  GWAS_df <- subfamily_from_TE(GWAS_df)
+
   xr <- data.frame()
-  for (i in unique(ex$subfamily)) {
-    subr <- ex[which(ex$subfamily == i), ]
+  for (i in unique(GWAS_df$subfamily)) {
+    subr <- GWAS_df[which(GWAS_df$subfamily == i), ]
     mi <- min(subr$age)
     ma <- max(subr$age)
     low_dec <- (((ma - mi) / 10)*d)  + mi
@@ -382,28 +412,32 @@ perc_lowdecile <- function(GWAS_df, d) {
 
 
 
-prop_overlap <- function(LD_df, GWAS_df) {
-  "
-  Function to calculate and plot the proportion of LD Clumps with overlapping TEs
+prop_overlap <- function (LD_df, GWAS_df) {
+  "\n  Function to calculate and plot the proportion of LD Clumps with overlapping TEs\n\n  Inputs:\n    LD_df <- GWAS clumps data frame\n    GWAS_df <- Output data frame of overlap functions\n\n  Output:\n    GGplot2 formatted pie chart of percent LD clumps with/without overlapping TEs\n  "
 
-  Inputs:
-    LD_df <- GWAS clumps data frame
-    GWAS_df <- Output data frame of overlap functions
+  if ("varId" %in% colnames(LD_df)) {
+    cn <- "varID"
+  }else if ("refsnp_id" %in% colnames(LD_df)) {
+    cn <- "refsnp_id"
+  } else {
+    stop("VarID or refsnp_id must be present in the colnames of LD_df")
+  }
 
-  Output:
-    GGplot2 formatted pie chart of percent LD clumps with/without overlapping TEs
-  "
-  snp_df <- data.frame(No_TE_Overlap = (length(LD_df$varId) - length(which(LD_df$varId %in% GWAS_df$varId))) / length(LD_df$varId),
-                       TE_Overlap = length(which(LD_df$varId %in% GWAS_df$varId)) / length(LD_df$varId))
+  ol1 <- LD_df[, which(colnames(LD_df) == cn)]
+  ol2 <- GWAS_df[, which(colnames(GWAS_df) == cn)]
+
+  snp_df <- data.frame(No_TE_Overlap = (length(ol1) -
+                                          length(which(ol1 %in% ol2)))/length(ol1),
+                       TE_Overlap = length(which(ol1 %in% ol2))/length(ol1))
   snp_df <- as.data.frame(t(snp_df))
   snp_df$column <- c("No TE Overlap", "TE Overlapping SNPs")
-  snp_df$label <- paste(round(snp_df$V1 * 100, digits = 1), "%", sep = "")
-
-  p <- ggpie(snp_df, x = "V1", label = "label", fill = "column", color = "white", lab.pos = "in") +
-    theme(legend.position = "right") +
-    theme(text = element_text(face = "bold", size = 15), plot.title = element_text(hjust = 0.5), line = element_line(size = 1)) +
+  snp_df$label <- paste(round(snp_df$V1 * 100, digits = 1),
+                        "%", sep = "")
+  p <- ggpie(snp_df, x = "V1", label = "label", fill = "column",
+             color = "white", lab.pos = "in") + theme(legend.position = "right") +
+    theme(text = element_text(face = "bold", size = 15),
+          plot.title = element_text(hjust = 0.5), line = element_line(size = 1)) +
     ggtitle("Proportion of Regions \n with Overlapping TEs")
-
   return(p)
 }
 
@@ -418,26 +452,13 @@ prop_subfamilies <- function(GWAS_df){
   Output:
     GGPlot2 formatted pie chart showing percent of each subfamily represented in overlapping TEs
   "
-  TE_family <- c()
-  for (i in GWAS_df$name) {
-    if("?" %in% strsplit(i, "")[[1]]) {
-      i <- strsplit(i, "")[[1]]
-      i <- i[-which(i == "?")]
-      i <- paste(i, collapse = "")
-    }
-    f = strsplit(i, "/")[[1]]
-    if (length(f) == 2) {
-      TE_family <- c(TE_family, f[2])
-    }else{
-      TE_family <- c(TE_family, paste(f[2], f[3], sep = "/"))
-    }
-  }
-  GWAS_df$subfamily <- TE_family
+
+  GWAS_df$subfamily <- subfamily_from_TE(GWAS_df)
 
   pie_df <- data.frame()
-  for (t in unique(TE_family)){
+  for (t in unique(GWAS_df$subfamily)){
     tdf <- data.frame(Subfamily = t,
-                      Percent = (length(which(TE_family == t)) / length(TE_family))*100)
+                      Percent = (length(which(GWAS_df$subfamily == t)) / length(GWAS_df$subfamily))*100)
     if (nrow(pie_df) == 0) {
       pie_df <- tdf
     }else{
@@ -466,5 +487,91 @@ prop_subfamilies <- function(GWAS_df){
   p3 <- ggarrange(p1, p2, ncol = 2)
   return(p3)
 }
+
+
+
+
+calc_subfamily_agez <- function(GWAS_df, TE_age_df){
+  "
+  Function to calculate the relative age of each overlapping TE by subfamily to compare all TEs
+
+  Input:
+    GWAS_df = Output data frame of overlap functions
+    TE_age_df <- Data.frame of specific TE elements with their ranges and associated age (MYA)
+
+  Output:
+    Updated GWAS_df with column subf_z for realtive ages (z score by subfamily)
+  "
+
+  GWAS_df <- subfamily_from_TE(GWAS_df)
+
+  #calculating mean and sd for each subfamily
+  sub_stats <- data.frame()
+  for (s in unique(GWAS_df$subfamily)) {
+    m <- mean(TE_age_df$age[grep(s, TE_age_df$name)])
+    sd <- sd(TE_age_df$age[grep(s, TE_age_df$name)])
+    tdf <- data.frame(subfamily = s,
+                      mean = m,
+                      sd = sd)
+    if (nrow(sub_stats) == 0) {
+      sub_stats <- tdf
+    }else{
+      sub_stats <- rbind(sub_stats, tdf)
+    }
+  }
+
+  # calculating z score of subfamily z-score for each overlapping TE
+  agez <- c()
+  for (r in c(1:nrow(GWAS_df))) {
+    sf <- GWAS_df$name[r]
+
+    for (k in sub_stats$subfamily) {
+      gs <- grep(k, sf)
+      if (length(gs) == 1) {
+        ss <- which(sub_stats$subfamily == k)
+      }
+    }
+    #ss <- grep(sub_stats$subfamily, sf)
+    ta <- (GWAS_df$age[r] - sub_stats$mean[ss]) / sub_stats$sd[ss]
+    agez <- c(agez, ta)
+  }
+
+  GWAS_df$subf_z <- agez
+  return(GWAS_df)
+}
+
+
+subfamily_from_TE <- function(GWAS_df) {
+  "
+  Function to generate column for TE subfamilies from TE names
+
+  Input:
+    GWAS_df = Output data frame of overlap functions
+
+  Output:
+    Updated GWAS_df with subfamilies in column name 'subfamily'
+  "
+  TE_family <- c()
+  for (i in GWAS_df$name) {
+    if("?" %in% strsplit(i, "")[[1]]) {
+      i <- strsplit(i, "")[[1]]
+      i <- i[-which(i == "?")]
+      i <- paste(i, collapse = "")
+    }
+    f = strsplit(i, "/")[[1]]
+    if (length(f) == 2) {
+      TE_family <- c(TE_family, f[2])
+    }else{
+      TE_family <- c(TE_family, paste(f[2], f[3], sep = "/"))
+    }
+  }
+  GWAS_df$subfamily <- TE_family
+  return(GWAS_df)
+}
+
+
+
+
+
 
 

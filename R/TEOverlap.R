@@ -571,6 +571,91 @@ subfamily_from_TE <- function(GWAS_df) {
 
 
 
+distance_plot <- function(SNP, TE_age_df, window = 500, color_by_subfamily = T, plot_expected = F) {
+  "
+  Function to plot the density of TEs from the SNP
+
+  Inputs:
+    SNP = Single row data frame of a single SNP (one row of LD_df)
+    TE_age_df <- Data.frame of specific TE elements with their ranges and associated age (MYA)
+    window = +- base pair window from SNP position to plot density of TEs
+    color_by_subfamily = Whether or not the plot should be colored by TE subfamilies
+
+  Output:
+    Ggplot formatted plot of density of TEs around the SNP position
+
+  "
+  TE_age_df$position <- ((TE_age_df$end - TE_age_df$start)/2 + as.numeric(TE_age_df$start))
+  chr_df <- TE_age_df[which(TE_age_df$chromosome == SNP$chromosome), ]
+
+  # plotting window to search for TEs within this distance from the SNP
+  dist_df <- chr_df[which(chr_df$position < (SNP$position + window) & chr_df$position > (SNP$position - window)) , ]
+
+  if (color_by_subfamily == T) {dist_df <- subfamily_from_TE(dist_df)}
+
+  if (color_by_subfamily == F) {
+    p <- ggplot(dist_df, aes(x = position, color = "black")) +
+      scale_color_manual(name = "Density", values = c("black" = "black", "red" = "red"), labels = c("Observed", "Expected"))
+  }else{
+    p <- ggplot(dist_df, aes(x = position, color = subfamily)) +
+      labs(color = "Subfamily")
+  }
+
+  if (plot_expected == T) {
+    exp_df <- calc_expected_positions(SNP, TE_age_df, window)
+    p <- p +
+      geom_density(data = exp_df, aes(x = exp_position, color = "red"))
+  }
+
+  p + geom_density() +
+    geom_rug(size = 1) +
+    geom_vline(xintercept = SNP$position, color = "black", linetype = "dashed") +
+    xlim(c(SNP$position-window, SNP$position+window)) +
+    theme_classic() +
+    theme(axis.title.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.line.y = element_blank(),
+          legend.position = "right") +
+    xlab(paste("Chromosome", dist_df$chromosome)) +
+    ggtitle(SNP$refsnp_id)
+
+}
+
+
+
+calc_expected_positions <- function(SNP, TE_age_df, window, perc_genome_coverage = .45) {
+  "
+  Function to generate the expected TE insertions around a SNP
+
+  Inputs:
+    SNP = Single row data frame of a single SNP (one row of LD_df)
+    TE_age_df <- Data.frame of specific TE elements with their ranges and associated age (MYA)
+    window = +- base pair window from SNP position to plot density of TEs
+    perc_genome_coverage = Average coverage of TEs in the genome from literature
+
+  Output:
+    Data frame of expected TE positions around the SNP to use for density plot
+  "
+  avg_TE_length <- mean(TE_age_df$end - TE_age_df$start)
+  num_expected_TE_insertions <- round(((window*2)*perc_genome_coverage)/ avg_TE_length)
+  sep <- (window*2)/num_expected_TE_insertions
+  exp_pos <- unlist(lapply(c(1:num_expected_TE_insertions), FUN = function(x) {sep/2 + sep*(x-1)}))
+  exp_pos <- exp_pos + (SNP$position-window)
+  ep_df <- data.frame(exp_position = exp_pos)
+  return(ep_df)
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

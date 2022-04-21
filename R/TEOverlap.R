@@ -1,17 +1,4 @@
-# Hello, world!
-#
-# This is an example function named 'hello'
-# which prints 'Hello, world!'.
-#
-# You can learn more about package authoring with RStudio at:
-#
-#   http://r-pkgs.had.co.nz/
-#
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Install Package:           'Cmd + Shift + B'
-#   Check Package:             'Cmd + Shift + E'
-#   Test Package:              'Cmd + Shift + T'
+
 
 LDClump_window <- function(LD_df, win) {
   "
@@ -598,13 +585,17 @@ distance_plot <- function(SNP, TE_age_df, window = 500, color_by_subfamily = T, 
       scale_color_manual(name = "Density", values = c("black" = "black", "red" = "red"), labels = c("Observed", "Expected"))
   }else{
     p <- ggplot(dist_df, aes(x = position, color = subfamily)) +
-      labs(color = "Subfamily")
+      labs(color = "Subfamily") +
+      ggtitle(SNP$refsnp_id)
   }
 
   if (plot_expected == T) {
     exp_df <- calc_expected_positions(SNP, TE_age_df, window)
+
+    kst <- ks.test(dist_df$position, exp_df$exp_position)
     p <- p +
-      geom_density(data = exp_df, aes(x = exp_position, color = "red"))
+      geom_density(data = exp_df, aes(x = exp_position, color = "red")) +
+      ggtitle(paste(SNP$refsnp_id, paste("K-S pval = ", round(kst$p.value, digits = 3)), sep = "\n"))
   }
 
   p + geom_density() +
@@ -617,8 +608,7 @@ distance_plot <- function(SNP, TE_age_df, window = 500, color_by_subfamily = T, 
           axis.ticks.y = element_blank(),
           axis.line.y = element_blank(),
           legend.position = "right") +
-    xlab(paste("Chromosome", dist_df$chromosome)) +
-    ggtitle(SNP$refsnp_id)
+    xlab(paste("Chromosome", dist_df$chromosome))
 
 }
 
@@ -632,7 +622,7 @@ calc_expected_positions <- function(SNP, TE_age_df, window, perc_genome_coverage
     SNP = Single row data frame of a single SNP (one row of LD_df)
     TE_age_df <- Data.frame of specific TE elements with their ranges and associated age (MYA)
     window = +- base pair window from SNP position to plot density of TEs
-    perc_genome_coverage = Average coverage of TEs in the genome from literature
+    perc_genome_coverage = Average coverage of TEs in the genome from literature (45%)
 
   Output:
     Data frame of expected TE positions around the SNP to use for density plot
